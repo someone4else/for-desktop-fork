@@ -12,6 +12,7 @@ import {
 import windowIconAsset from "../../assets/desktop/icon.png?asset";
 
 import { config } from "./config";
+import { setupScreenShare } from "./screenShare";
 import { updateTrayMenu } from "./tray";
 
 // global reference to main window
@@ -85,6 +86,26 @@ export function createMainWindow() {
 
   // load the entrypoint
   mainWindow.loadURL(BUILD_URL.toString());
+
+  // enable screen sharing via desktopCapturer
+  const { session } = mainWindow.webContents;
+  setupScreenShare(session, mainWindow);
+
+  // grant media permissions so getDisplayMedia / getUserMedia work
+  session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(
+      permission === "media" ||
+        permission === "notifications" ||
+        permission === "fullscreen",
+    );
+  });
+  session.setPermissionCheckHandler((_wc, permission) => {
+    return (
+      permission === "media" ||
+        permission === "notifications" ||
+        permission === "fullscreen"
+    );
+  });
 
   // minimise window to tray
   mainWindow.on("close", (event) => {
